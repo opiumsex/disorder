@@ -1,0 +1,2215 @@
+<!DOCTYPE html>
+<!-- saved from url=(0040)https://rococo-gnome-ab1f88.netlify.app/ -->
+<html lang="ru"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT Lookup</title>
+    <script defer="" src="./OSINT Lookup_files/libphonenumber-js.min.js"></script>
+    <link rel="stylesheet" href="./OSINT Lookup_files/leaflet.css">
+    <script defer="" src="./OSINT Lookup_files/leaflet.js"></script>
+    <link rel="stylesheet" href="./OSINT Lookup_files/all.min.css">
+    <script defer="" src="./OSINT Lookup_files/exif.min.js"></script>
+    <script defer="" src="./OSINT Lookup_files/papaparse.min.js"></script>
+    <link rel="stylesheet" href="./OSINT Lookup_files/all(1).min.css">
+</head>
+
+<body data-theme="black-red">
+    <div class="container">
+        <h1><i class="fas fa-search"></i> OSINT BY @kslox</h1>
+        
+        <div class="theme-selector">
+            <button class="theme-btn" data-theme="green" title="Зеленая"><i class="fas fa-leaf"></i></button>
+            <button class="theme-btn" data-theme="red" title="Красная"><i class="fas fa-fire"></i></button>
+            <button class="theme-btn" data-theme="blue" title="Синяя"><i class="fas fa-water"></i></button>
+            <button class="theme-btn" data-theme="gray" title="Серая"><i class="fas fa-cloud"></i></button>
+            <button class="theme-btn" data-theme="gray-red" title="Серо-красная"><i class="fas fa-tint"></i></button>
+            <button class="theme-btn" data-theme="black-red" title="Черно-красная"><i class="fas fa-skull"></i></button>
+        </div>
+
+        <div class="button-group">
+            <button onclick="toggleInput(&#39;ip&#39;)"><i class="fas fa-network-wired"></i> IP</button>
+            <button onclick="toggleInput(&#39;phone&#39;)"><i class="fas fa-phone"></i> Телефон</button>
+            <button onclick="toggleInput(&#39;whois&#39;)"><i class="fas fa-globe"></i> WHOIS</button>
+            <button onclick="toggleInput(&#39;username&#39;)"><i class="fas fa-user"></i> Пользователь</button>
+            <button onclick="toggleInput(&#39;url&#39;)"><i class="fas fa-link"></i> URL</button>
+            <button onclick="toggleInput(&#39;dns&#39;)"><i class="fas fa-server"></i> DNS</button>
+            <button onclick="toggleInput(&#39;email&#39;)"><i class="fas fa-envelope"></i> Email</button>
+            <button onclick="toggleInput(&#39;image&#39;)"><i class="fas fa-image"></i> Изображение</button>
+            <button onclick="toggleInput(&#39;mac&#39;)"><i class="fas fa-ethernet"></i> MAC</button>
+            <button onclick="toggleInput(&#39;domain&#39;)"><i class="fas fa-globe-americas"></i> Домен</button>
+            <button onclick="toggleInput(&#39;csv&#39;)"><i class="fas fa-file-csv"></i> CSV Поиск</button>
+            <button onclick="toggleInput(&#39;txt&#39;)"><i class="fas fa-file-alt"></i> TXT</button>
+            <button onclick="toggleInput(&#39;portscan&#39;)"><i class="fas fa-door-open"></i> Порты</button>
+            <button onclick="toggleInput(&#39;useragent&#39;)"><i class="fas fa-robot"></i> User-Agent</button>
+            <button onclick="toggleInput(&#39;timezone&#39;)"><i class="fas fa-clock"></i> Время</button>
+            <button onclick="toggleInput(&#39;webarchive&#39;)"><i class="fas fa-history"></i> Архив</button>
+            <button onclick="toggleInput(&#39;dorks&#39;)"><i class="fas fa-search-plus"></i> Dorks</button>
+        </div>
+        <div id="dorksSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-search-plus"></i>
+                <select id="dorkType">
+                    <option value="site">site: (поиск по сайту)</option>
+                    <option value="inurl">inurl: (поиск в URL)</option>
+                    <option value="intitle">intitle: (поиск в заголовке)</option>
+                    <option value="intext">intext: (поиск текста)</option>
+                    <option value="allinurl">allinurl: (все слова в URL)</option>
+                    <option value="filetype">filetype: (поиск по типу файла)</option>
+                    <option value="ext">ext: (поиск по расширению)</option>
+                    <option value="cache">cache: (кэш страницы)</option>
+                    <option value="related">related: (связанные сайты)</option>
+                    <option value="link">link: (ссылки на сайт)</option>
+                    <option value="minus">- (исключить слово)</option>
+                    <option value="quotes">"..." (точная фраза)</option>
+                    <option value="wildcard">* (подстановочный знак)</option>
+                    <option value="custom">Пользовательский запрос</option>
+                </select>
+                <input type="text" id="dorkInput" placeholder="Введите параметры (например, example.com hacking)">
+                <button onclick="generateDork()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="dorkResult" class="result-card"></div>
+        </div>
+        <div id="ipSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-network-wired"></i>
+                <input type="text" id="ipInput" placeholder="Введите IP-адрес">
+                <button onclick="lookupIP()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="ipResult" class="result-card"></div>
+        </div>
+        
+        <div id="phoneSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-phone"></i>
+                <input type="text" id="phoneInput" placeholder="Введите номер телефона">
+                <button onclick="lookupPhone()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="phoneResult" class="result-card"></div>
+        </div>
+
+        <div id="whoisSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-globe"></i>
+                <input type="text" id="whoisInput" placeholder="Введите домен или IP">
+                <button onclick="lookupWhois()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="whoisResult" class="result-card"></div>
+        </div>
+
+        <div id="usernameSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" id="usernameInput" placeholder="Введите имя пользователя">
+                <button onclick="lookupUsername()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="usernameResult" class="result-card"></div>
+        </div>
+
+        <div id="urlSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-link"></i>
+                <input type="text" id="urlInput" placeholder="Введите URL">
+                <button onclick="lookupURL()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="urlResult" class="result-card"></div>
+        </div>
+
+        <div id="dnsSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-server"></i>
+                <input type="text" id="dnsInput" placeholder="Введите домен">
+                <button onclick="lookupDNS()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="dnsResult" class="result-card"></div>
+        </div>
+
+        <div id="emailSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="text" id="emailInput" placeholder="Введите email">
+                <button onclick="lookupEmail()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="emailResult" class="result-card"></div>
+        </div>
+
+        <div id="imageSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-image"></i>
+                <input type="file" id="imageInput" accept="image/*">
+                <button onclick="lookupImage()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="imageResult" class="result-card"></div>
+        </div>
+
+        <div id="macSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-ethernet"></i>
+                <input type="text" id="macInput" placeholder="Введите MAC-адрес">
+                <button onclick="lookupMAC()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="macResult" class="result-card"></div>
+        </div>
+
+        <div id="domainSection" class="section">
+            <div class="input-group">
+                <i class="fas fa-globe-americas"></i>
+                <input type="text" id="domainInput" placeholder="Введите домен">
+                <button onclick="lookupDomain()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="domainResult" class="result-card">
+                    <div class="info-block">
+                        <h3>🌐 Информация о домене</h3>
+                        <p><strong>Домен:</strong> hizzex.ru</p>
+                        <p><strong>SSL Сертификаты:</strong> Не найдено</p>
+                    </div>
+                </div>
+        </div>
+
+        <div id="csvSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-file-csv"></i>
+                <input type="file" id="csvInput" accept=".csv">
+                <input type="text" id="csvQuery" placeholder="Введите запрос для поиска">
+                <button onclick="lookupCSV()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="csvResult" class="result-card"></div>
+        </div>
+
+        <div id="txtSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-file-alt"></i>
+                <input type="file" id="txtInput" accept=".txt">
+                <input type="text" id="txtQuery" placeholder="Введите запрос для поиска">
+                <button onclick="lookupTXT()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="txtResult" class="result-card"></div>
+        </div>
+
+        <div id="portscanSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-door-open"></i>
+                <input type="text" id="portscanInput" placeholder="Введите IP и порты (например, 192.168.1.1:80,443)">
+                <button onclick="scanPorts()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="portscanResult" class="result-card"></div>
+        </div>
+
+        <div id="useragentSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-robot"></i>
+                <input type="text" id="useragentInput" placeholder="Введите User-Agent">
+                <button onclick="lookupUserAgent()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="useragentResult" class="result-card"></div>
+        </div>
+
+        <div id="timezoneSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-clock"></i>
+                <input type="text" id="timezoneInput" placeholder="Введите время (например, 14:30)">
+                <button onclick="lookupTimezone()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="timezoneResult" class="result-card"></div>
+        </div>
+
+        <div id="webarchiveSection" class="section hidden">
+            <div class="input-group">
+                <i class="fas fa-history"></i>
+                <input type="text" id="webarchiveInput" placeholder="Введите URL">
+                <button onclick="lookupWebArchive()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="webarchiveResult" class="result-card"></div>
+        </div>
+        
+        <footer>
+            <a href="https://t.me/lemon_tool" target="_blank"><i class="fab fa-telegram"></i></a>
+        </footer>
+    </div>
+
+    <style>
+        :root {
+            /* Зеленая тема (по умолчанию) */
+            --primary-color: #00ff00;
+            --primary-dark: #00cc00;
+            --bg-gradient-start: #0d1117;
+            --bg-gradient-end: #1a1f2b;
+            --container-bg: rgba(22, 27, 34, 0.95);
+            --section-bg: #1e252d;
+            --input-bg: #2e3642;
+            --result-bg: #252c36;
+            --text-color: #ffffff;
+            --shadow-color: rgba(0, 255, 0, 0.3);
+        }
+    
+        [data-theme="red"] {
+            --primary-color: #ff0000;
+            --primary-dark: #cc0000;
+            --shadow-color: rgba(255, 0, 0, 0.3);
+        }
+    
+        [data-theme="blue"] {
+            --primary-color: #00b7ff;
+            --primary-dark: #0099cc;
+            --shadow-color: rgba(0, 183, 255, 0.3);
+        }
+    
+        [data-theme="gray"] {
+            --primary-color: #b0b0b0;
+            --primary-dark: #8c8c8c;
+            --shadow-color: rgba(176, 176, 176, 0.3);
+        }
+    
+        [data-theme="gray-red"] {
+            --primary-color: #ff4444;
+            --primary-dark: #cc3333;
+            --bg-gradient-start: #2e2e2e;
+            --bg-gradient-end: #4a4a4a;
+            --container-bg: rgba(60, 60, 60, 0.95);
+            --section-bg: #3a3a3a;
+            --input-bg: #4f4f4f;
+            --result-bg: #444444;
+            --shadow-color: rgba(255, 68, 68, 0.3);
+        }
+    
+        [data-theme="black-red"] {
+            --primary-color: #ff1a1a;
+            --primary-dark: #cc1414;
+            --bg-gradient-start: #000000;
+            --bg-gradient-end: #1a0000;
+            --container-bg: rgba(20, 0, 0, 0.95);
+            --section-bg: #1a0000;
+            --input-bg: #2e1a1a;
+            --result-bg: #220000;
+            --shadow-color: rgba(255, 26, 26, 0.3);
+        }
+    
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+    
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: var(--text-color);
+            padding: 20px;
+            min-height: 100vh;
+            transition: background 0.5s ease;
+        }
+    
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: var(--container-bg);
+            border-radius: 25px;
+            box-shadow: 0 12px 50px var(--shadow-color);
+            transition: all 0.5s ease;
+        }
+    
+        .container:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px var(--shadow-color);
+        }
+    
+        h1 {
+            font-size: 2.5em;
+            text-align: center;
+            color: var(--primary-color);
+            text-shadow: 0 0 25px var(--shadow-color);
+            margin-bottom: 30px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+    
+        h1 i {
+            margin-right: 12px;
+            transition: transform 0.4s ease;
+        }
+    
+        h1:hover i {
+            transform: rotate(360deg);
+        }
+    
+        .theme-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+    
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            border: 2px solid var(--primary-dark);
+            transition: all 0.4s ease;
+        }
+    
+        .theme-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--shadow-color);
+        }
+    
+        .theme-btn:active {
+            transform: scale(0.9);
+        }
+    
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+    
+        button {
+            padding: 12px 20px;
+            background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
+            border: none;
+            border-radius: 15px;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 5px 20px var(--shadow-color);
+        }
+    
+        button:hover {
+            transform: scale(1.05) translateY(-4px);
+            box-shadow: 0 10px 30px var(--shadow-color);
+            background: linear-gradient(45deg, var(--primary-dark), var(--primary-color));
+        }
+    
+        button:active {
+            transform: scale(0.95);
+            box-shadow: 0 3px 15px var(--shadow-color);
+        }
+    
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+    
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            background: var(--section-bg);
+            border-radius: 20px;
+            transition: all 0.6s ease;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+    
+        .section:not(.hidden) {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    
+        .hidden {
+            display: none;
+        }
+    
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--input-bg);
+            padding: 10px;
+            border-radius: 15px;
+            border: 2px solid transparent;
+            transition: all 0.4s ease;
+        }
+    
+        .input-group:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 20px var(--shadow-color);
+        }
+    
+        .input-group i {
+            padding: 10px;
+            color: var(--primary-color);
+            transition: transform 0.4s ease;
+        }
+    
+        .input-group:hover i {
+            transform: scale(1.15) rotate(10deg);
+        }
+    
+        input, select {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-color);
+            font-size: 1em;
+            outline: none;
+            transition: all 0.4s ease;
+        }
+    
+        input:focus, select:focus {
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 0 12px var(--shadow-color);
+        }
+    
+        .input-group button {
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+    
+        .result-card {
+            padding: 20px;
+            background: var(--result-bg);
+            border-radius: 15px;
+            margin-top: 15px;
+            box-shadow: inset 0 0 20px var(--shadow-color);
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            transition: all 0.6s ease;
+            opacity: 0;
+            transform: scale(0.9);
+        }
+    
+        .result-card:not(:empty) {
+            opacity: 1;
+            transform: scale(1);
+        }
+    
+        .result-card strong {
+            color: var(--primary-color);
+            text-shadow: 0 0 8px var(--shadow-color);
+        }
+    
+        .info-block {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--input-bg);
+            border-radius: 12px;
+            border-left: 5px solid var(--primary-color);
+            transition: all 0.4s ease;
+        }
+    
+        .info-block:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 25px var(--shadow-color);
+        }
+    
+        .info-block h3 {
+            font-size: 1.2em;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            transition: color 0.3s ease;
+        }
+    
+        .info-block:hover h3 {
+            color: var(--primary-dark);
+        }
+    
+        #map {
+            height: 300px;
+            width: 100%;
+            margin-top: 15px;
+            border-radius: 8px;
+        }
+    
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: var(--result-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+    
+        .result-table th, .result-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--primary-color);
+        }
+    
+        .result-table th {
+            background: var(--input-bg);
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+    
+        .result-table td {
+            color: var(--text-color);
+        }
+    
+        .result-table tr:last-child td {
+            border-bottom: none;
+        }
+    
+        .result-table a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+    
+        .result-table a:hover {
+            text-decoration: underline;
+        }
+    
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+    
+        footer a {
+            color: var(--primary-color);
+            font-size: 1.5em;
+            transition: all 0.4s ease;
+        }
+    
+        footer a:hover {
+            color: var(--primary-dark);
+            transform: scale(1.3) rotate(15deg);
+        }
+    
+        @keyframes glow {
+            from { text-shadow: 0 0 15px var(--shadow-color); }
+            to { text-shadow: 0 0 25px var(--shadow-color); }
+        }
+    
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+                border-radius: 20px;
+            }
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+            .input-group {
+                flex-direction: column;
+            }
+            input, .input-group button, select {
+                width: 100%;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            .theme-selector {
+                flex-wrap: wrap;
+            }
+            .match-card {
+                flex: 1 1 100%;
+            }
+            #dorkResult .info-block {
+                background: var(--input-bg, #2e3642); /* Явное значение по умолчанию */
+                color: var(--text-color, #ffffff);
+                font-size: 0.9em;
+                padding: 15px;
+            }
+            #dorkResult {
+                background: var(--result-bg, #252c36); /* Явное значение для контейнера */
+                max-height: 300px;
+            }
+        }
+    
+        .fancy-frame {
+            border: 2px solid var(--primary-color);
+            border-radius: 15px;
+            padding: 20px;
+            background: var(--section-bg);
+            box-shadow: 0 8px 25px var(--shadow-color), inset 0 0 10px var(--shadow-color);
+            transition: all 0.4s ease;
+        }
+    
+        .fancy-frame:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 35px var(--shadow-color), inset 0 0 15px var(--shadow-color);
+        }
+    
+        .match-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+    
+        .match-card {
+            flex: 1 1 calc(33% - 15px);
+            background: var(--result-bg);
+            border: 1px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+    
+        .match-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+    
+        .match-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+    
+        .vertical-list {
+            list-style: none;
+            padding: 0;
+        }
+    
+        .vertical-list li {
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px dashed var(--primary-dark);
+        }
+    
+        .vertical-list li:last-child {
+            border-bottom: none;
+        }
+    
+        .vertical-list li strong {
+            color: var(--primary-color);
+            margin-right: 5px;
+        }
+    
+        .highlight {
+            background: var(--primary-color);
+            color: #000;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+    
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    
+        .pagination button {
+            padding: 8px 12px;
+            font-size: 1em;
+        }
+    
+        .pagination span {
+            color: var(--text-color);
+        }
+    
+        /* Усиленные стили для #dorkResult */
+        #dorkResult {
+            background: var(--result-bg, #252c36) !important;
+            color: var(--text-color, #ffffff) !important;
+        }
+    
+        #dorkResult .info-block {
+            background: var(--input-bg, #2e3642) !important;
+            color: var(--text-color, #ffffff) !important;
+        }
+    
+        #dorkResult .fancy-frame {
+            background: var(--section-bg, #1e252d) !important;
+            color: var(--text-color, #ffffff) !important;
+        }
+    </style>
+
+    <script>
+        // Переключение тем
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const theme = btn.getAttribute('data-theme');
+                document.body.setAttribute('data-theme', theme);
+                localStorage.setItem('selectedTheme', theme);
+            });
+        });
+
+        const savedTheme = localStorage.getItem('selectedTheme') || 'green';
+        document.body.setAttribute('data-theme', savedTheme);
+
+        const lang = {
+            ru: {
+                enterIp: "Введите IP-адрес",
+                invalidIp: "Некорректный IP-адрес",
+                enterPhone: "Введите номер телефона",
+                invalidPhone: "Некорректный номер телефона",
+                enterWhois: "Введите домен или IP",
+                invalidWhois: "Некорректный домен или IP",
+                enterUsername: "Введите имя пользователя",
+                invalidUsername: "Некорректное имя пользователя",
+                enterUrl: "Введите URL",
+                invalidUrl: "Некорректный URL",
+                enterDns: "Введите домен",
+                invalidDns: "Некорректный домен",
+                enterEmail: "Введите email",
+                invalidEmail: "Некорректный email",
+                enterImage: "Загрузите изображение",
+                invalidImage: "Ошибка загрузки изображения",
+                enterMac: "Введите MAC-адрес",
+                invalidMac: "Некорректный MAC-адрес",
+                enterDomain: "Введите домен",
+                invalidDomain: "Некорректный домен",
+                enterCsv: "Загрузите CSV и введите запрос",
+                invalidCsv: "Ошибка загрузки CSV или запроса",
+                enterTxt: "Загрузите TXT и введите запрос",
+                invalidTxt: "Ошибка загрузки TXT или запроса",
+                fileTooLarge: "Файл слишком большой (макс. 500 МБ)",
+                enterPorts: "Введите IP и порты (например, 192.168.1.1:80,443)",
+                invalidPorts: "Некорректный формат IP или портов",
+                enterUserAgent: "Введите User-Agent",
+                invalidUserAgent: "Некорректный User-Agent",
+                enterTime: "Введите время (например, 14:30)",
+                invalidTime: "Некорректный формат времени",
+                enterWebArchive: "Введите URL",
+                invalidWebArchive: "Некорректный URL для архива",
+                enterDork: "Введите параметры (например, example.com hacking)",
+                invalidDork: "Введите корректные параметры для дорка",
+                generatedDork: "Сгенерированный запрос:",
+                loading: "Загрузка...",
+                error: "Ошибка"
+            }
+        };
+        const currentLang = 'ru';
+
+        document.getElementById('ipInput').placeholder = lang[currentLang].enterIp;
+        document.getElementById('phoneInput').placeholder = lang[currentLang].enterPhone;
+        document.getElementById('whoisInput').placeholder = lang[currentLang].enterWhois;
+        document.getElementById('usernameInput').placeholder = lang[currentLang].enterUsername;
+        document.getElementById('urlInput').placeholder = lang[currentLang].enterUrl;
+        document.getElementById('dnsInput').placeholder = lang[currentLang].enterDns;
+        document.getElementById('emailInput').placeholder = lang[currentLang].enterEmail;
+        document.getElementById('macInput').placeholder = lang[currentLang].enterMac;
+        document.getElementById('domainInput').placeholder = lang[currentLang].enterDomain;
+        document.getElementById('csvQuery').placeholder = "Введите запрос для поиска";
+        document.getElementById('txtQuery').placeholder = "Введите запрос для поиска";
+        document.getElementById('portscanInput').placeholder = lang[currentLang].enterPorts;
+        document.getElementById('useragentInput').placeholder = lang[currentLang].enterUserAgent;
+        document.getElementById('timezoneInput').placeholder = lang[currentLang].enterTime;
+        document.getElementById('webarchiveInput').placeholder = lang[currentLang].enterWebArchive;
+        document.getElementById('dorkInput').placeholder = lang[currentLang].enterDork;
+
+        const cache = {
+            get(key) { return JSON.parse(localStorage.getItem(key)); },
+            set(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+        };
+
+        function toggleInput(type) {
+            const sections = ['ipSection', 'phoneSection', 'whoisSection', 'usernameSection', 'urlSection', 'dnsSection', 'emailSection', 'imageSection', 'macSection', 'domainSection', 'csvSection', 'txtSection', 'portscanSection', 'useragentSection', 'timezoneSection', 'webarchiveSection', 'dorksSection'];
+            const currentSection = document.getElementById(type + 'Section');
+
+            sections.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (sectionId !== type + 'Section' && !section.classList.contains('hidden')) {
+                    section.classList.add('hidden');
+                }
+            });
+
+            currentSection.classList.toggle('hidden');
+        }
+
+        function isValidIP(ip) {
+            const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+            return ipRegex.test(ip);
+        }
+
+        function safeHTML(strings, ...values) {
+            return strings.reduce((result, string, i) => {
+                const value = values[i] ? String(values[i]).replace(/</g, '<').replace(/>/g, '>') : '';
+                return result + string + value;
+            }, '');
+        }
+
+        async function lookupIP() {
+            const ip = document.getElementById('ipInput').value.trim();
+            const button = document.querySelector('#ipSection button');
+            const result = document.getElementById('ipResult');
+            const cached = cache.get(`ip_${ip}`);
+
+            if (!ip || !isValidIP(ip)) {
+                alert(lang[currentLang].invalidIp);
+                return;
+            }
+
+            if (cached) {
+                result.innerHTML = cached;
+                return;
+            }
+
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+
+            const sources = [
+                `http://ip-api.com/json/${ip}?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query&lang=ru`,
+                `https://ipwhois.app/json/${ip}?lang=ru`,
+                `http://ipinfo.io/${ip}/json`,
+                `https://geolocation-db.com/json/${ip}&position=true`
+            ];
+
+            let data;
+            for (const source of sources) {
+                try {
+                    const response = await fetch(source, { timeout: 10000 });
+                    if (!response.ok) {
+                        result.innerText += `\n⚠️ Ошибка подключения к ${source}: ${response.status}`;
+                        continue;
+                    }
+                    data = await response.json();
+                    if (data.status && data.status !== "success") {
+                        result.innerText += `\n⚠️ ${source}: ${data.message || 'Нет данных'}`;
+                        continue;
+                    }
+                    break;
+                } catch (error) {
+                    result.innerText += `\n⚠️ Ошибка при запросе к ${source}: ${error.message}`;
+                }
+            }
+
+            if (!data) {
+                result.innerText = "❌ Не удалось получить данные ни от одного источника";
+                button.disabled = false;
+                return;
+            }
+
+            const resultHTML = `
+                <div class="info-block">
+                    <h3>🌐 Основная информация</h3>
+                    <p><strong>IP Адрес:</strong> ${data.query || data.ip || 'Неизвестно'}</p>
+                    <p><strong>Континент:</strong> ${data.continent || 'Неизвестно'} (${data.continentCode || 'N/A'})</p>
+                    <p><strong>Страна:</strong> ${data.country || 'Неизвестно'} (${data.countryCode || 'N/A'})</p>
+                    <p><strong>Регион:</strong> ${data.regionName || data.region || 'Неизвестно'}</p>
+                    <p><strong>Город:</strong> ${data.city || 'Неизвестно'}</p>
+                    <p><strong>Почтовый индекс:</strong> ${data.zip || 'Н/Д'}</p>
+                </div>
+                <div class="info-block">
+                    <h3>📡 Техническая информация</h3>
+                    <p><strong>Провайдер:</strong> ${data.isp || 'Неизвестно'}</p>
+                    <p><strong>Организация:</strong> ${data.org || 'Неизвестно'}</p>
+                    <p><strong>AS:</strong> ${data.as || 'Неизвестно'}</p>
+                    <p><strong>AS Имя:</strong> ${data.asname || 'Неизвестно'}</p>
+                </div>
+                <div class="info-block">
+                    <h3>📍 Геолокация</h3>
+                    <p><strong>Широта:</strong> ${data.lat || 'Н/Д'}</p>
+                    <p><strong>Долгота:</strong> ${data.lon || 'Н/Д'}</p>
+                    <p><strong>Часовой пояс:</strong> ${data.timezone || 'Н/Д'}</p>
+                    <p><strong>Валюта:</strong> ${data.currency || 'Н/Д'}</p>
+                </div>
+                <div class="info-block">
+                    <h3>🔒 Безопасность</h3>
+                    <p><strong>Мобильная сеть:</strong> ${data.mobile ? 'Да' : 'Нет'}</p>
+                    <p><strong>Прокси/VPN:</strong> ${data.proxy ? 'Да' : 'Нет'}</p>
+                    <p><strong>Хостинг:</strong> ${data.hosting ? 'Да' : 'Нет'}</p>
+                </div>
+            `;
+
+            result.innerHTML = resultHTML;
+
+            if (data.lat && data.lon) {
+                const mapDiv = document.createElement('div');
+                mapDiv.id = 'map';
+                result.appendChild(mapDiv);
+                const map = L.map('map').setView([data.lat, data.lon], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }).addTo(map);
+                L.marker([data.lat, data.lon]).addTo(map)
+                    .bindPopup(`${data.city || 'Неизвестно'}, ${data.country || 'Неизвестно'}`)
+                    .openPopup();
+            }
+
+            cache.set(`ip_${ip}`, result.innerHTML);
+            button.disabled = false;
+        }
+
+        async function lookupPhone() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            const button = document.querySelector('#phoneSection button');
+            const result = document.getElementById('phoneResult');
+            const cached = cache.get(`phone_${phone}`);
+
+            if (!phone) {
+                alert(lang[currentLang].invalidPhone);
+                return;
+            }
+
+            if (cached) {
+                result.innerHTML = cached;
+                return;
+            }
+
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+
+            try {
+                const parsedNumber = libphonenumber.parsePhoneNumber(phone);
+                if (!parsedNumber.isValid()) {
+                    result.innerText = "Некорректный номер телефона";
+                    return;
+                }
+
+                const country = parsedNumber.country;
+                const numberType = parsedNumber.getType();
+                const nationalNumber = parsedNumber.formatNational();
+                const internationalNumber = parsedNumber.formatInternational();
+                const e164Number = parsedNumber.format('E.164');
+                const whatsappLink = `https://wa.me/${phone.replace('+', '')}`;
+                const viberLink = `viber://chat?number=${phone.replace('+', '')}`;
+                const telegramLink = `https://t.me/${phone.replace('+', '')}`;
+
+                const resultHTML = safeHTML`
+                    <p><strong>Номер (национальный):</strong> ${nationalNumber}</p>
+                    <p><strong>Номер (международный):</strong> ${internationalNumber}</p>
+                    <p><strong>Номер (E.164):</strong> ${e164Number}</p>
+                    <p><strong>Страна:</strong> ${country}</p>
+                    <p><strong>Тип номера:</strong> ${numberType}</p>
+                    <p><strong>WhatsApp:</strong> <a href="${whatsappLink}" target="_blank">Открыть</a></p>
+                    <p><strong>Viber:</strong> <a href="${viberLink}" target="_blank">Открыть</a></p>
+                    <p><strong>Telegram:</strong> <a href="${telegramLink}" target="_blank">Открыть</a></p>
+                `;
+                cache.set(`phone_${phone}`, resultHTML);
+                result.innerHTML = resultHTML;
+            } catch (error) {
+                result.innerText = `${lang[currentLang].error}: ${error.message}`;
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        async function lookupUsername() {
+            const username = document.getElementById('usernameInput').value.trim();
+            const button = document.querySelector('#usernameSection button');
+            const result = document.getElementById('usernameResult');
+            const cached = cache.get(`username_${username}`);
+        
+            if (!username) {
+                alert(lang[currentLang].invalidUsername);
+                return;
+            }
+        
+            if (cached) {
+                result.innerHTML = cached;
+                return;
+            }
+        
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+        
+            // Расширенный список платформ
+            const platforms = {
+                "Социальные сети": {
+                    "Twitter": `https://twitter.com/${encodeURIComponent(username)}`,
+                    "Instagram": `https://instagram.com/${encodeURIComponent(username)}`,
+                    "Facebook": `https://facebook.com/${encodeURIComponent(username)}`,
+                    "LinkedIn": `https://linkedin.com/in/${encodeURIComponent(username)}`,
+                    "Pinterest": `https://pinterest.com/${encodeURIComponent(username)}`,
+                    "Snapchat": `https://snapchat.com/add/${encodeURIComponent(username)}`,
+                    "VK": `https://vk.com/${encodeURIComponent(username)}`,
+                    "Odnoklassniki": `https://ok.ru/${encodeURIComponent(username)}`
+                },
+                "Стриминг и контент": {
+                    "YouTube": `https://www.youtube.com/@${encodeURIComponent(username)}`,
+                    "Twitch": `https://twitch.tv/${encodeURIComponent(username)}`,
+                    "TikTok": `https://www.tiktok.com/@${encodeURIComponent(username)}`,
+                    "Bilibili": `https://space.bilibili.com/${encodeURIComponent(username)}` // Примечание: требует ID, но можно проверить имя
+                },
+                "Мессенджеры": {
+                    "Telegram": `https://t.me/${encodeURIComponent(username)}`,
+                    "Discord": `https://discord.com/users/${encodeURIComponent(username)}` // Требует ID, но можно попробовать
+                },
+                "Форумы и сообщества": {
+                    "Reddit": `https://reddit.com/user/${encodeURIComponent(username)}`,
+                    "GitHub": `https://github.com/${encodeURIComponent(username)}`,
+                    "StackOverflow": `https://stackoverflow.com/users/${encodeURIComponent(username)}` // Исправлено
+                },
+                "Игровые платформы": {
+                    "Steam": `https://steamcommunity.com/id/${encodeURIComponent(username)}`,
+                    "Xbox": `https://xbox.com/en-US/profiles/${encodeURIComponent(username)}`,
+                    "PlayStation": `https://psnprofiles.com/${encodeURIComponent(username)}`
+                }
+            };
+        
+            const found = {};
+            const promises = [];
+        
+            // Проверяем каждую платформу
+            for (const [category, sites] of Object.entries(platforms)) {
+                found[category] = [];
+                for (const [platform, url] of Object.entries(sites)) {
+                    promises.push(
+                        fetch(url, {
+                            method: 'GET',
+                            redirect: 'manual', // Учитываем редиректы
+                            headers: {
+                                'User-Agent': 'OSINT-Lookup/1.0 (Contact: your-email@example.com)'
+                            },
+                            timeout: 5000 // Тайм-аут 5 секунд
+                        })
+                        .then(response => {
+                            if (response.status === 200) {
+                                found[category].push({ platform, url });
+                            }
+                            // Игнорируем 404 или редиректы, так как это может быть приватный профиль
+                        })
+                        .catch(() => {
+                            // Игнорируем ошибки (например, CORS или сеть)
+                        })
+                    );
+                }
+            }
+        
+            await Promise.all(promises);
+        
+            // Формируем результат
+            let totalFound = 0;
+            let resultHTML = `
+                <div class="info-block fancy-frame">
+                    <h3>🔍 Поиск по имени пользователя</h3>
+                    <p><strong>Ник:</strong> ${username}</p>
+            `;
+        
+            for (const [category, matches] of Object.entries(found)) {
+                if (matches.length > 0) {
+                    totalFound += matches.length;
+                    resultHTML += `
+                        <div class="match-container">
+                            <h4>${category}</h4>
+                            <ul class="vertical-list">
+                                ${matches.map(match => `
+                                    <li>
+                                        ${match.platform}: <a href="${match.url}" target="_blank">${match.url}</a>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+            }
+        
+            if (totalFound === 0) {
+                resultHTML += `
+                    <p>❌ Не найдено на проверенных платформах</p>
+                    <p>Примечание: Профиль может быть приватным, удалённым или ник не используется.</p>
+                `;
+            } else {
+                resultHTML += `
+                    <p><strong>Найдено совпадений:</strong> ${totalFound}</p>
+                `;
+            }
+        
+            resultHTML += `</div>`;
+            result.innerHTML = resultHTML;
+            cache.set(`username_${username}`, resultHTML);
+            button.disabled = false;
+        }
+
+        async function lookupURL() {
+            const url = document.getElementById('urlInput').value.trim();
+            const button = document.querySelector('#urlSection button');
+            const result = document.getElementById('urlResult');
+            const cached = cache.get(`url_${url}`);
+
+            if (!url || !/^https?:\/\/\S+$/.test(url)) {
+                alert(lang[currentLang].invalidUrl);
+                return;
+            }
+
+            if (cached) {
+                result.innerHTML = cached;
+                return;
+            }
+
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+
+            try {
+                const domain = new URL(url).hostname;
+                const response = await fetch(`https://ipwhois.app/json/${domain}`);
+                const data = await response.json();
+
+                if (!response.ok || data.success === false) {
+                    result.innerText = "Данные не найдены";
+                    return;
+                }
+
+                const resultHTML = safeHTML`
+                    <p><strong>URL:</strong> ${url}</p>
+                    <p><strong>Домен:</strong> ${data.query || 'N/A'}</p>
+                    <p><strong>Страна:</strong> ${data.country || 'N/A'}</p>
+                    <p><strong>Город:</strong> ${data.city || 'N/A'}</p>
+                    <p><strong>Провайдер:</strong> ${data.isp || 'N/A'}</p>
+                    <p><strong>Организация:</strong> ${data.org || 'N/A'}</p>
+                `;
+                cache.set(`url_${url}`, resultHTML);
+                result.innerHTML = resultHTML;
+            } catch (error) {
+                result.innerText = `${lang[currentLang].error}: ${error.message}`;
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        async function lookupDNS() {
+            const domain = document.getElementById('dnsInput').value.trim();
+            const button = document.querySelector('#dnsSection button');
+            const result = document.getElementById('dnsResult');
+            const cached = cache.get(`dns_${domain}`);
+
+            if (!domain || !/\w+\.\w+/.test(domain)) {
+                alert(lang[currentLang].invalidDns);
+                return;
+            }
+
+            if (cached) {
+                result.innerHTML = cached;
+                return;
+            }
+
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+
+            try {
+                const response = await fetch(`https://dns.google/resolve?name=${domain}`);
+                const data = await response.json();
+
+                if (!data.Answer) {
+                    result.innerText = "DNS записи не найдены";
+                    return;
+                }
+
+                const records = data.Answer.map(a => {
+                    const type = a.type === 1 ? 'A' : a.type === 15 ? 'MX' : a.type === 2 ? 'NS' : `Тип ${a.type}`;
+                    return `${type}: ${a.data}`;
+                }).join('\n');
+                const resultHTML = safeHTML`<pre>${records}</pre>`;
+                cache.set(`dns_${domain}`, resultHTML);
+                result.innerHTML = resultHTML;
+            } catch (error) {
+                result.innerText = `${lang[currentLang].error}: ${error.message}`;
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        async function lookupEmail() {
+            const email = document.getElementById('emailInput').value.trim();
+            const button = document.querySelector('#emailSection button');
+            const result = document.getElementById('emailResult');
+            const cached = cache.get(`email_${email}`);
+
+            if (!email || !/\S+@\S+\.\S+/.test(email)) {
+                alert(lang[currentLang].invalidEmail);
+                return;
+            }
+
+            if (cached) {
+                result.innerHTML = cached;
+                return;
+            }
+
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+
+            try {
+                const response = await fetch(`https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(email)}`, {
+                    headers: { "User-Agent": "OSINT-Lookup", "hibp-api-key": "" }
+                });
+                const breaches = response.ok ? await response.json() : [];
+
+                const resultHTML = `
+                    <div class="info-block">
+                        <h3>📧 Информация об Email</h3>
+                        <p><strong>Email:</strong> ${email}</p>
+                        <p><strong>Утечки данных:</strong> ${breaches.length ? breaches.map(b => b.Name).join(", ") : "Не найдено"}</p>
+                    </div>
+                `;
+                result.innerHTML = resultHTML;
+                cache.set(`email_${email}`, resultHTML);
+            } catch (error) {
+                result.innerText = `❌ Ошибка: ${error.message}`;
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function lookupImage() {
+            const fileInput = document.getElementById('imageInput');
+            const button = document.querySelector('#imageSection button');
+            const result = document.getElementById('imageResult');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert(lang[currentLang].invalidImage);
+                return;
+            }
+
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+
+            EXIF.getData(file, function() {
+                const exifData = EXIF.getAllTags(this);
+                const resultHTML = `
+                    <div class="info-block">
+                        <h3>🖼️ Метаданные изображения</h3>
+                        <p><strong>Имя файла:</strong> ${file.name}</p>
+                        <p><strong>Дата:</strong> ${exifData.DateTimeOriginal || 'Н/Д'}</p>
+                        <p><strong>Камера:</strong> ${exifData.Model || 'Н/Д'}</p>
+                        <p><strong>Производитель:</strong> ${exifData.Make || 'Н/Д'}</p>
+                        <p><strong>Широта:</strong> ${exifData.GPSLatitude ? EXIF.getGPS(exifData.GPSLatitude) : 'Н/Д'}</p>
+                        <p><strong>Долгота:</strong> ${exifData.GPSLongitude ? EXIF.getGPS(exifData.GPSLongitude) : 'Н/Д'}</p>
+                    </div>
+                `;
+                result.innerHTML = resultHTML;
+
+                if (exifData.GPSLatitude && exifData.GPSLongitude) {
+                    const lat = EXIF.getGPS(exifData.GPSLatitude);
+                    const lon = EXIF.getGPS(exifData.GPSLongitude);
+                    const mapDiv = document.createElement('div');
+                    mapDiv.id = 'map';
+                    result.appendChild(mapDiv);
+                    const map = L.map('map').setView([lat, lon], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap'
+                    }).addTo(map);
+                    L.marker([lat, lon]).addTo(map).bindPopup('Местоположение фото').openPopup();
+                }
+
+                cache.set(`image_${file.name}`, result.innerHTML);
+                button.disabled = false;
+            });
+
+            EXIF.getGPS = function(coord) {
+                if (!coord) return 0;
+                return coord[0] + coord[1] / 60 + coord[2] / 3600;
+            };
+        }
+
+        async function lookupMAC() {
+            const mac = document.getElementById('macInput').value.trim().toUpperCase();
+            const button = document.querySelector('#macSection button');
+            const result = document.getElementById('macResult');
+            const cached = cache.get(`mac_${mac}`);
+
+            if (!mac || !/^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$/.test(mac)) {
+                alert(lang[currentLang].invalidMac);
+                return;
+            }
+
+            if (cached) {
+                result.innerHTML = cached;
+                return;
+            }
+
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+
+            const oui = mac.split(/[:-]/).slice(0, 3).join("-");
+            const sources = [
+                `https://macvendors.com/api/${oui}`,
+                `https://api.maclookup.app/v2/macs/${oui}`
+            ];
+
+            try {
+                let data;
+                for (const source of sources) {
+                    try {
+                        const response = await fetch(source, { timeout: 5000 });
+                        if (!response.ok) {
+                            result.innerText += `\n⚠️ Не удалось подключиться к ${source}`;
+                            continue;
+                        }
+                        data = await response.json();
+                        if (source.includes("macvendors.com") && data.company) break;
+                        if (source.includes("maclookup.app") && data.found && data.company) break;
+                    } catch (err) {
+                        result.innerText += `\n⚠️ Ошибка при запросе к ${source}: ${err.message}`;
+                        continue;
+                    }
+                }
+
+                if (!data || (!data.company && !data.found)) {
+                    result.innerText = "❌ Не удалось получить данные ни от одного источника";
+                    return;
+                }
+
+                const company = data.company || "Неизвестно";
+                const resultHTML = `
+                    <div class="info-block">
+                        <h3>📡 Информация о MAC-адресе</h3>
+                        <p><strong>MAC:</strong> ${mac}</p>
+                        <p><strong>Производитель:</strong> ${company}</p>
+                    </div>
+                `;
+                result.innerHTML = resultHTML;
+                cache.set(`mac_${mac}`, resultHTML);
+            } catch (error) {
+                result.innerText = `❌ Ошибка: ${error.message}`;
+            } finally {
+                button.disabled = false;
+            }
+        }
+        async function lookupWhois() {
+            const input = document.getElementById('whoisInput').value.trim();
+            const button = document.querySelector('#whoisSection button');
+            const result = document.getElementById('whoisResult');
+            const cached = cache.get(`whois_${input}`);
+        
+            // Проверка валидности ввода (домен или IP)
+            if (!input || !/^(?:\w+\.\w+|\d+\.\d+\.\d+\.\d+)$/.test(input)) {
+                alert(lang[currentLang].invalidWhois);
+                return;
+            }
+        
+            if (cached) {
+                result.innerHTML = cached;
+                return;
+            }
+        
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+        
+            const sources = [
+                `https://ipwhois.app/json/${encodeURIComponent(input)}?lang=ru`,
+                `https://whoisjs.com/api/whois/${encodeURIComponent(input)}`
+            ];
+        
+            let data = null;
+            for (const source of sources) {
+                try {
+                    const response = await fetch(source, {
+                        headers: {
+                            'User-Agent': 'OSINT-Lookup/1.0 (Contact: your-email@example.com)',
+                            'Accept': 'application/json'
+                        },
+                        timeout: 10000 // Тайм-аут 10 секунд
+                    });
+        
+                    if (!response.ok) {
+                        result.innerText += `\n⚠️ Ошибка подключения к ${source}: ${response.status}`;
+                        continue;
+                    }
+        
+                    data = await response.json();
+                    if (source.includes('ipwhois.app') && data.success === false) {
+                        result.innerText += `\n⚠️ ${source}: ${data.message || 'Нет данных'}`;
+                        continue;
+                    }
+                    if (source.includes('whoisjs.com') && !data.domain_name) {
+                        result.innerText += `\n⚠️ ${source}: Нет данных`;
+                        continue;
+                    }
+                    break; // Успешно получили данные, выходим из цикла
+                } catch (error) {
+                    result.innerText += `\n⚠️ Ошибка при запросе к ${source}: ${error.message}`;
+                }
+            }
+        
+            if (!data) {
+                result.innerHTML = `
+                    <div class="info-block">
+                        <h3>🌐 WHOIS Информация</h3>
+                        <p><strong>Ввод:</strong> ${input}</p>
+                        <p>❌ Не удалось получить данные ни от одного источника</p>
+                    </div>
+                `;
+                button.disabled = false;
+                return;
+            }
+        
+            // Форматирование результата в зависимости от источника
+            let resultHTML;
+            if (data.success !== undefined) { // ipwhois.app
+                resultHTML = `
+                    <div class="info-block fancy-frame">
+                        <h3>🌐 WHOIS Информация</h3>
+                        <p><strong>Домен/IP:</strong> ${data.query || input}</p>
+                        <p><strong>Страна:</strong> ${data.country || 'Н/Д'} (${data.country_code || 'N/A'})</p>
+                        <p><strong>Регион:</strong> ${data.region || 'Н/Д'}</p>
+                        <p><strong>Город:</strong> ${data.city || 'Н/Д'}</p>
+                        <p><strong>Провайдер:</strong> ${data.isp || 'Н/Д'}</p>
+                        <p><strong>Организация:</strong> ${data.org || 'Н/Д'}</p>
+                        <p><strong>AS:</strong> ${data.asn || 'Н/Д'}</p>
+                    </div>
+                `;
+            } else { // whoisjs.com
+                resultHTML = `
+                    <div class="info-block fancy-frame">
+                        <h3>🌐 WHOIS Информация</h3>
+                        <p><strong>Домен:</strong> ${data.domain_name || input}</p>
+                        <p><strong>Регистратор:</strong> ${data.registrar || 'Н/Д'}</p>
+                        <p><strong>Дата создания:</strong> ${data.creation_date || 'Н/Д'}</p>
+                        <p><strong>Дата обновления:</strong> ${data.updated_date || 'Н/Д'}</p>
+                        <p><strong>Дата истечения:</strong> ${data.expiration_date || 'Н/Д'}</p>
+                        <p><strong>Сервера имен:</strong> ${data.name_servers?.join(', ') || 'Н/Д'}</p>
+                        <p><strong>Статус:</strong> ${data.status?.join(', ') || 'Н/Д'}</p>
+                    </div>
+                `;
+            }
+        
+            result.innerHTML = resultHTML;
+            cache.set(`whois_${input}`, resultHTML);
+            button.disabled = false;
+        }
+        async function lookupDomain() {
+            const domain = document.getElementById('domainInput').value.trim();
+            const button = document.querySelector('#domainSection button');
+            const result = document.getElementById('domainResult');
+            const cached = cache.get(`domain_${domain}`);
+
+            if (!domain || !/\w+\.\w+/.test(domain)) {
+                alert(lang[currentLang].invalidDomain);
+                return;
+            }
+
+            if (cached) {
+                result.innerHTML = cached;
+                return;
+            }
+
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+
+            try {
+                const response = await fetch(`https://crt.sh/?q=${domain}&output=json`);
+                const certs = await response.json();
+                const certInfo = certs.slice(0, 5).map(cert => cert.name_value).join(", ");
+
+                const resultHTML = `
+                    <div class="info-block">
+                        <h3>🌐 Информация о домене</h3>
+                        <p><strong>Домен:</strong> ${domain}</p>
+                        <p><strong>SSL Сертификаты:</strong> ${certInfo || 'Не найдено'}</p>
+                    </div>
+                `;
+                result.innerHTML = resultHTML;
+                cache.set(`domain_${domain}`, resultHTML);
+            } catch (error) {
+                result.innerText = `❌ Ошибка: ${error.message}`;
+            } finally {
+                button.disabled = false;
+            }
+        }
+        function generateDork() {
+            const dorkType = document.getElementById('dorkType').value; // Получаем выбранный тип оператора из выпадающего списка
+            const input = document.getElementById('dorkInput').value.trim(); // Получаем введенный пользователем текст и убираем лишние пробелы
+            const button = document.querySelector('#dorksSection button'); // Находим кнопку в секции Dorks
+            const result = document.getElementById('dorkResult'); // Элемент для вывода результата
+            const cached = cache.get(`dork_${dorkType}_${input}`); // Проверяем, есть ли результат в кэше
+        
+            // Проверка на пустой ввод
+            if (!input) {
+                alert(lang[currentLang].invalidDork); // Предупреждение, если ничего не введено
+                return;
+            }
+        
+            // Если результат есть в кэше, отображаем его и выходим
+            if (cached) {
+                result.innerHTML = cached;
+                return;
+            }
+        
+            button.disabled = true; // Отключаем кнопку на время обработки
+            result.innerText = lang[currentLang].loading; // Показываем "Загрузка..."
+        
+            // Расширенный список операторов с описанием и примерами
+            const operators = {
+                'site': { desc: 'Поиск по конкретному сайту', example: 'site:example.com hacking' },
+                'inurl': { desc: 'Поиск в URL', example: 'inurl:login' },
+                'intitle': { desc: 'Поиск в заголовке страницы', example: 'intitle:"index of"' },
+                'intext': { desc: 'Поиск текста на странице', example: 'intext:password' },
+                'allinurl': { desc: 'Все слова в URL', example: 'allinurl:admin login' },
+                'filetype': { desc: 'Поиск по типу файла', example: 'filetype:pdf site:*.edu' },
+                'ext': { desc: 'Поиск по расширению файла', example: 'ext:log site:example.com' },
+                'cache': { desc: 'Кэшированная версия сайта', example: 'cache:example.com' },
+                'related': { desc: 'Связанные сайты', example: 'related:example.com' },
+                'link': { desc: 'Ссылки на сайт', example: 'link:example.com' },
+                'minus': { desc: 'Исключить слово', example: 'hacking -inurl:login' },
+                'quotes': { desc: 'Точная фраза', example: '"admin panel"' },
+                'wildcard': { desc: 'Подстановочный знак', example: 'site:*.org login' },
+                'custom': { desc: 'Пользовательский запрос', example: 'site:example.com intext:login' } // Добавлен custom в объект
+            };
+        
+            // Парсинг ввода для формирования запроса
+            let query = '';
+            if (dorkType === 'custom') {
+                query = input; // Для custom берем ввод как есть
+            } else {
+                const parts = input.split(' ').filter(part => part); // Разделяем ввод на слова, убираем пустые
+                query = parts.map(part => {
+                    // Если часть уже содержит оператор (-, ", *), оставляем как есть
+                    if (part.startsWith('-') || part.startsWith('"') || part.includes('*')) {
+                        return part;
+                    }
+                    return `${dorkType}:${part}`; // Применяем выбранный оператор к каждому слову
+                }).join(' ');
+            }
+        
+            // Формируем URL для разных поисковиков
+            const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            const bingUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+            const duckduckgoUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
+        
+            // Формируем HTML для вывода результата
+            const resultHTML = `
+                <div class="info-block fancy-frame">
+                    <h3>🔍 Google Dork</h3>
+                    <p><strong>Тип оператора:</strong> ${operators[dorkType]?.desc || 'Пользовательский запрос'}</p>
+                    <p><strong>Сгенерированный запрос:</strong> <span id="dorkQuery">${query}</span></p>
+                    <button onclick="navigator.clipboard.writeText('${query.replace(/'/g, "\\'")}')">📋 Копировать запрос</button>
+                    <div class="match-container">
+                        <h4>Поиск в:</h4>
+                        <ul class="vertical-list">
+                            <li><a href="${googleUrl}" target="_blank">Google</a></li>
+                            <li><a href="${bingUrl}" target="_blank">Bing</a></li>
+                            <li><a href="${duckduckgoUrl}" target="_blank">DuckDuckGo</a></li>
+                        </ul>
+                    </div>
+                    <div class="match-container">
+                        <h4>Примеры использования:</h4>
+                        <ul class="vertical-list">
+                            <li>${operators[dorkType]?.example || 'site:example.com intext:login'}</li>
+                            <li>site:*.edu filetype:pdf "research paper"</li>
+                            <li>inurl:(login | admin) -intext:"sign up"</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        
+            result.innerHTML = resultHTML; // Отображаем результат
+            cache.set(`dork_${dorkType}_${input}`, resultHTML); // Сохраняем в кэш
+            button.disabled = false; // Включаем кнопку обратно
+        }
+        function lookupCSV() {
+            const fileInput = document.getElementById('csvInput');
+            const query = document.getElementById('csvQuery').value.trim();
+            const button = document.querySelector('#csvSection button');
+            const result = document.getElementById('csvResult');
+            const file = fileInput.files[0];
+            const MAX_FILE_SIZE = 2000 * 1024 * 1024; // 500 МБ в байтах
+            const ITEMS_PER_PAGE = 5;
+
+            if (!file || !query) {
+                alert(lang[currentLang].invalidCsv);
+                return;
+            }
+
+            if (file.size > MAX_FILE_SIZE) {
+                alert(lang[currentLang].fileTooLarge);
+                return;
+            }
+
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    const data = results.data;
+                    const totalLines = data.length;
+                    const matches = data.filter(row => 
+                        Object.values(row).some(value => 
+                            value && value.toString().toLowerCase().includes(query.toLowerCase())
+                        )
+                    );
+
+                    if (matches.length === 0) {
+                        result.innerHTML = `
+                            <div class="info-block fancy-frame">
+                                <h3>📊 Результаты поиска в CSV</h3>
+                                <p><strong>Файл:</strong> ${file.name} (${(file.size / 1024).toFixed(2)} КБ)</p>
+                                <p><strong>Запрос:</strong> ${query}</p>
+                                <p>❌ Совпадений не найдено</p>
+                            </div>
+                        `;
+                    } else {
+                        let currentPage = 1;
+                        const totalPages = Math.ceil(matches.length / ITEMS_PER_PAGE);
+
+                        function renderPage(page) {
+                            const start = (page - 1) * ITEMS_PER_PAGE;
+                            const end = start + ITEMS_PER_PAGE;
+                            const paginatedMatches = matches.slice(start, end);
+
+                            let resultHTML = `
+                                <div class="info-block fancy-frame">
+                                    <h3>📊 Результаты поиска в CSV</h3>
+                                    <p><strong>Файл:</strong> ${file.name} (${(file.size / 1024).toFixed(2)} КБ)</p>
+                                    <p><strong>Всего строк:</strong> ${totalLines}</p>
+                                    <p><strong>Запрос:</strong> ${query}</p>
+                                    <p><strong>Найдено совпадений:</strong> ${matches.length}</p>
+                                    <button onclick="downloadResults('csv')">💾 Скачать результаты</button>
+                                    <div class="match-container">
+                            `;
+
+                            paginatedMatches.forEach((row, index) => {
+                                resultHTML += `
+                                    <div class="match-card">
+                                        <h4>Запись ${start + index + 1}</h4>
+                                        <ul class="vertical-list">
+                                            ${Object.entries(row).map(([key, value]) => {
+                                                const text = value ? value.toString() : 'N/A';
+                                                const highlighted = text.toLowerCase().includes(query.toLowerCase())
+                                                    ? `<span class="highlight">${text}</span>`
+                                                    : text;
+                                                return `<li><strong>${key}:</strong> ${text.match(/^https?:\/\//) ? `<a href="${text}" target="_blank">${highlighted}</a>` : highlighted}</li>`;
+                                            }).join('')}
+                                        </ul>
+                                    </div>
+                                `;
+                            });
+
+                            resultHTML += `
+                                    </div>
+                                    <div class="pagination">
+                                        <button onclick="renderPage(${page - 1})" ${page === 1 ? 'disabled' : ''}>⬅️</button>
+                                        <span>Страница ${page} из ${totalPages}</span>
+                                        <button onclick="renderPage(${page + 1})" ${page === totalPages ? 'disabled' : ''}>➡️</button>
+                                    </div>
+                                </div>
+                            `;
+                            result.innerHTML = resultHTML;
+
+                            window.downloadResults = function(format) {
+                                const csvContent = Papa.unparse(matches);
+                                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blob);
+                                link.download = `search_results_${query}.csv`;
+                                link.click();
+                            };
+                        }
+
+                        renderPage(currentPage);
+                        window.renderPage = renderPage;
+                    }
+                    button.disabled = false;
+                },
+                error: function(error) {
+                    result.innerText = `❌ Ошибка: ${error.message}`;
+                    button.disabled = false;
+                }
+            });
+        }
+
+        function lookupTXT() {
+            const fileInput = document.getElementById('txtInput');
+            const query = document.getElementById('txtQuery').value.trim();
+            const button = document.querySelector('#txtSection button');
+            const result = document.getElementById('txtResult');
+            const file = fileInput.files[0];
+            const MAX_FILE_SIZE = 2000 * 1024 * 1024; // 500 МБ в байтах
+            const ITEMS_PER_PAGE = 5;
+
+            if (!file || !query) {
+                alert(lang[currentLang].invalidTxt);
+                return;
+            }
+
+            if (file.size > MAX_FILE_SIZE) {
+                alert(lang[currentLang].fileTooLarge);
+                return;
+            }
+
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                const totalLines = lines.length;
+                const matches = lines.filter(line => line.toLowerCase().includes(query.toLowerCase()));
+
+                if (matches.length === 0) {
+                    result.innerHTML = `
+                        <div class="info-block fancy-frame">
+                            <h3>📝 Результаты поиска в TXT</h3>
+                            <p><strong>Файл:</strong> ${file.name} (${(file.size / 1024).toFixed(2)} КБ)</p>
+                            <p><strong>Запрос:</strong> ${query}</p>
+                            <p>❌ Совпадений не найдено</p>
+                        </div>
+                    `;
+                } else {
+                    let currentPage = 1;
+                    const totalPages = Math.ceil(matches.length / ITEMS_PER_PAGE);
+
+                    function renderPage(page) {
+                        const start = (page - 1) * ITEMS_PER_PAGE;
+                        const end = start + ITEMS_PER_PAGE;
+                        const paginatedMatches = matches.slice(start, end);
+
+                        let resultHTML = `
+                            <div class="info-block fancy-frame">
+                                <h3>📝 Результаты поиска в TXT</h3>
+                                <p><strong>Файл:</strong> ${file.name} (${(file.size / 1024).toFixed(2)} КБ)</p>
+                                <p><strong>Всего строк:</strong> ${totalLines}</p>
+                                <p><strong>Запрос:</strong> ${query}</p>
+                                <p><strong>Найдено совпадений:</strong> ${matches.length}</p>
+                                <button onclick="downloadResults('txt')">💾 Скачать результаты</button>
+                                <div class="match-container">
+                        `;
+
+                        paginatedMatches.forEach((line, index) => {
+                            const highlighted = line.replace(
+                                new RegExp(`(${query})`, 'gi'),
+                                '<span class="highlight">$1</span>'
+                            );
+                            resultHTML += `
+                                <div class="match-card">
+                                    <h4>Строка ${start + index + 1}</h4>
+                                    <ul class="vertical-list">
+                                        <li>${highlighted}</li>
+                                    </ul>
+                                </div>
+                            `;
+                        });
+
+                        resultHTML += `
+                                </div>
+                                <div class="pagination">
+                                    <button onclick="renderPage(${page - 1})" ${page === 1 ? 'disabled' : ''}>⬅️</button>
+                                    <span>Страница ${page} из ${totalPages}</span>
+                                    <button onclick="renderPage(${page + 1})" ${page === totalPages ? 'disabled' : ''}>➡️</button>
+                                </div>
+                            </div>
+                        `;
+                        result.innerHTML = resultHTML;
+
+                        window.downloadResults = function(format) {
+                            const blob = new Blob([matches.join('\n')], { type: 'text/plain;charset=utf-8;' });
+                            const link = document.createElement('a');
+                            link.href = URL.createObjectURL(blob);
+                            link.download = `search_results_${query}.txt`;
+                            link.click();
+                        };
+                    }
+
+                    renderPage(currentPage);
+                    window.renderPage = renderPage;
+                }
+                button.disabled = false;
+            };
+
+            reader.onerror = function() {
+                result.innerText = `❌ Ошибка чтения файла: ${reader.error.message}`;
+                button.disabled = false;
+            };
+
+            reader.readAsText(file);
+        }
+
+        async function scanPorts() {
+            const input = document.getElementById('portscanInput').value.trim();
+            const button = document.querySelector('#portscanSection button');
+            const result = document.getElementById('portscanResult');
+            const cached = cache.get(`portscan_${input}`);
+
+            if (!input || !/^\d+\.\d+\.\d+\.\d+:[\d,]+$/.test(input)) {
+                alert(lang[currentLang].invalidPorts);
+                return;
+            }
+
+            if (cached) {
+                result.innerHTML = cached;
+                return;
+            }
+
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+
+            try {
+                const [ip, portsStr] = input.split(':');
+                const ports = portsStr.split(',').map(Number);
+                const apiUrl = `https://api.hackertarget.com/nmap/?q=${ip}`;
+                
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error('Ошибка API');
+                
+                const data = await response.text();
+                const lines = data.split('\n');
+                const openPorts = lines.filter(line => 
+                    ports.some(port => line.includes(` ${port}/tcp`) && line.includes('open'))
+                );
+
+                const resultHTML = `
+                    <div class="info-block">
+                        <h3>🔍 Сканер портов</h3>
+                        <p><strong>IP:</strong> ${ip}</p>
+                        <p><strong>Проверенные порты:</strong> ${ports.join(', ')}</p>
+                        <p><strong>Открытые порты:</strong> ${openPorts.length ? openPorts.join('<br>') : 'Не найдено'}</p>
+                    </div>
+                `;
+                result.innerHTML = resultHTML;
+                cache.set(`portscan_${input}`, resultHTML);
+            } catch (error) {
+                result.innerText = `❌ Ошибка: ${error.message} (Примечание: Сканирование портов ограничено клиентской стороной)`;
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        async function lookupUserAgent() {
+            const ua = document.getElementById('useragentInput').value.trim();
+            const button = document.querySelector('#useragentSection button');
+            const result = document.getElementById('useragentResult');
+            const cached = cache.get(`ua_${ua}`);
+
+            if (!ua) {
+                alert(lang[currentLang].invalidUserAgent);
+                return;
+            }
+
+            if (cached) {
+                result.innerHTML = cached;
+                return;
+            }
+
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+
+            try {
+                const response = await fetch(`https://api.userstack.com/detect?access_key=YOUR_API_KEY&ua=${encodeURIComponent(ua)}`);
+                const data = await response.json();
+
+                if (!response.ok || data.error) {
+                    throw new Error(data.error?.message || 'Ошибка API');
+                }
+
+                const resultHTML = `
+                    <div class="info-block">
+                        <h3>🤖 Анализ User-Agent</h3>
+                        <p><strong>User-Agent:</strong> ${ua}</p>
+                        <p><strong>Браузер:</strong> ${data.browser?.name || 'Н/Д'} ${data.browser?.version || ''}</p>
+                        <p><strong>ОС:</strong> ${data.os?.name || 'Н/Д'} ${data.os?.version || ''}</p>
+                        <p><strong>Устройство:</strong> ${data.device?.type || 'Н/Д'} ${data.device?.brand || ''}</p>
+                    </div>
+                `;
+                result.innerHTML = resultHTML;
+                cache.set(`ua_${ua}`, resultHTML);
+            } catch (error) {
+                const browser = ua.match(/(firefox|chrome|safari|opera|edge|ie)/i)?.[0] || 'Неизвестно';
+                const os = ua.match(/(windows|mac|linux|android|ios)/i)?.[0] || 'Неизвестно';
+                const resultHTML = `
+                    <div class="info-block">
+                        <h3>🤖 Анализ User-Agent (базовый)</h3>
+                        <p><strong>User-Agent:</strong> ${ua}</p>
+                        <p><strong>Браузер:</strong> ${browser}</p>
+                        <p><strong>ОС:</strong> ${os}</p>
+                        <p><strong>Примечание:</strong> Для полного анализа нужен API ключ</p>
+                    </div>
+                `;
+                result.innerHTML = resultHTML;
+                cache.set(`ua_${ua}`, resultHTML);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        async function lookupTimezone() {
+            const timeInput = document.getElementById('timezoneInput').value.trim();
+            const button = document.querySelector('#timezoneSection button');
+            const result = document.getElementById('timezoneResult');
+            const cached = cache.get(`time_${timeInput}`);
+        
+            const timeDateRegex = /^(\d{2}:\d{2})(?:\s(\d{2}\.\d{2}\.\d{4}))?$/;
+            if (!timeInput || !timeDateRegex.test(timeInput)) {
+                alert(lang[currentLang].invalidTime);
+                return;
+            }
+        
+            if (cached) {
+                result.innerHTML = cached;
+                return;
+            }
+        
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+        
+            try {
+                const [timePart, datePart] = timeInput.split(' ');
+                const [hours, minutes] = timePart.split(':').map(Number);
+                const inputTime = hours * 60 + minutes;
+        
+                let referenceDate = new Date();
+                if (datePart) {
+                    const [day, month, year] = datePart.split('.').map(Number);
+                    referenceDate = new Date(year, month - 1, day);
+                    if (isNaN(referenceDate.getTime())) {
+                        throw new Error('Некорректная дата');
+                    }
+                }
+        
+                const utcTime = referenceDate.getUTCHours() * 60 + referenceDate.getUTCMinutes();
+                let offset = (inputTime - utcTime) / 60;
+                if (offset < -12) offset += 24;
+                if (offset > 12) offset -= 24;
+        
+                // Основной источник: worldtimeapi.org с прокси
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                const apiUrl = 'http://worldtimeapi.org/api/timezone';
+                let timezoneList = [];
+                let validZones = [];
+        
+                try {
+                    const response = await fetch(proxyUrl + apiUrl, {
+                        headers: {
+                            'User-Agent': 'OSINT-Lookup/1.0 (Contact: your-email@example.com)',
+                            'Accept': 'application/json'
+                        },
+                        timeout: 10000
+                    });
+        
+                    if (!response.ok) {
+                        throw new Error(`Сервер ответил: ${response.status} ${response.statusText}`);
+                    }
+        
+                    timezoneList = await response.json();
+        
+                    validZones = await Promise.all(
+                        timezoneList
+                            .filter(tz => tz.includes('/'))
+                            .map(async tz => {
+                                try {
+                                    const tzResponse = await fetch(proxyUrl + `http://worldtimeapi.org/api/timezone/${tz}`, {
+                                        headers: {
+                                            'User-Agent': 'OSINT-Lookup/1.0 (Contact: your-email@example.com)',
+                                            'Accept': 'application/json'
+                                        },
+                                        timeout: 5000
+                                    });
+                                    const tzData = await tzResponse.json();
+                                    const rawOffset = tzData.raw_offset / 3600;
+                                    const dstOffset = (tzData.dst_offset || 0) / 3600;
+                                    const totalOffset = datePart && tzData.dst ? rawOffset + dstOffset : rawOffset;
+        
+                                    if (Math.abs(totalOffset - offset) < 1) {
+                                        return {
+                                            name: tz,
+                                            offset: totalOffset,
+                                            currentTime: new Date(tzData.datetime).toLocaleTimeString('ru-RU', { timeZone: tz }),
+                                            abbr: tzData.abbreviation,
+                                            lat: tzData.latitude ? parseFloat(tzData.latitude) : null,
+                                            lon: tzData.longitude ? parseFloat(tzData.longitude) : null
+                                        };
+                                    }
+                                    return null;
+                                } catch (err) {
+                                    return null;
+                                }
+                            })
+                    );
+        
+                    validZones = validZones.filter(zone => zone !== null);
+                } catch (apiError) {
+                    console.warn('Ошибка API worldtimeapi.org:', apiError.message);
+                    result.innerText += `\n⚠️ Не удалось загрузить данные с worldtimeapi.org: ${apiError.message}. Используем резервный источник...`;
+        
+                    // Резервный источник: статический JSON
+                    const fallbackResponse = await fetch('https://raw.githubusercontent.com/dmfilipenko/timezones.json/master/timezones.json');
+                    const fallbackZones = await fallbackResponse.json();
+        
+                    validZones = fallbackZones
+                        .filter(tz => {
+                            const tzOffset = datePart && tz.isDst ? tz.dstOffset : tz.offset;
+                            return Math.abs(tzOffset - offset) < 1;
+                        })
+                        .map(tz => ({
+                            name: tz.name,
+                            offset: tz.offset,
+                            currentTime: new Date().toLocaleTimeString('ru-RU', { timeZone: tz.utc[0] }),
+                            abbr: tz.abbr,
+                            lat: null, // Нет координат в fallback
+                            lon: null
+                        }));
+                }
+        
+                if (validZones.length === 0) {
+                    result.innerHTML = `
+                        <div class="info-block fancy-frame">
+                            <h3>⏰ Часовые пояса</h3>
+                            <p><strong>Введенное время:</strong> ${timeInput}</p>
+                            <p><strong>Смещение от UTC:</strong> ${offset >= 0 ? '+' : ''}${offset}</p>
+                            <p>❌ Подходящих часовых поясов не найдено</p>
+                        </div>
+                    `;
+                } else {
+                    let resultHTML = `
+                        <div class="info-block fancy-frame">
+                            <h3>⏰ Часовые пояса</h3>
+                            <p><strong>Введенное время:</strong> ${timeInput}</p>
+                            <p><strong>Смещение от UTC:</strong> ${offset >= 0 ? '+' : ''}${offset}</p>
+                            <p><strong>Найдено часовых поясов:</strong> ${validZones.length}</p>
+                            <div class="match-container">
+                    `;
+        
+                    validZones.forEach((zone, index) => {
+                        resultHTML += `
+                            <div class="match-card">
+                                <h4>${zone.name}</h4>
+                                <ul class="vertical-list">
+                                    <li><strong>Аббревиатура:</strong> ${zone.abbr}</li>
+                                    <li><strong>Текущее время:</strong> ${zone.currentTime}</li>
+                                    <li><strong>Смещение:</strong> UTC${zone.offset >= 0 ? '+' : ''}${zone.offset}</li>
+                                    ${zone.lat && zone.lon ? `<li><strong>Координаты:</strong> ${zone.lat}, ${zone.lon}</li>` : ''}
+                                </ul>
+                            </div>
+                        `;
+                    });
+        
+                    resultHTML += `
+                            </div>
+                        </div>
+                    `;
+        
+                    result.innerHTML = resultHTML;
+        
+                    if (validZones.some(zone => zone.lat && zone.lon)) {
+                        const mapDiv = document.createElement('div');
+                        mapDiv.id = 'timezoneMap';
+                        mapDiv.style.height = '300px';
+                        mapDiv.style.marginTop = '20px';
+                        result.appendChild(mapDiv);
+        
+                        const map = L.map('timezoneMap').setView([0, 0], 2);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap'
+                        }).addTo(map);
+        
+                        const bounds = [];
+                        validZones.forEach(zone => {
+                            if (zone.lat && zone.lon) {
+                                L.marker([zone.lat, zone.lon])
+                                    .addTo(map)
+                                    .bindPopup(`${zone.name}<br>Время: ${zone.currentTime}`);
+                                bounds.push([zone.lat, zone.lon]);
+                            }
+                        });
+        
+                        if (bounds.length > 0) {
+                            map.fitBounds(bounds);
+                        }
+                    }
+                }
+        
+                cache.set(`time_${timeInput}`, result.innerHTML);
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="info-block fancy-frame">
+                        <h3>⏰ Часовые пояса</h3>
+                        <p><strong>Введенное время:</strong> ${timeInput}</p>
+                        <p>❌ Ошибка: ${error.message}</p>
+                        <p>Попробуйте позже или проверьте подключение к сети.</p>
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+            }
+        }
+        async function lookupWebArchive() {
+            const url = document.getElementById('webarchiveInput').value.trim();
+            const button = document.querySelector('#webarchiveSection button');
+            const result = document.getElementById('webarchiveResult');
+            const cached = cache.get(`webarchive_${url}`);
+        
+            if (!url || !/^https?:\/\/\S+$/.test(url)) {
+                alert(lang[currentLang].invalidWebArchive);
+                return;
+            }
+        
+            if (cached) {
+                result.innerHTML = cached;
+                return;
+            }
+        
+            button.disabled = true;
+            result.innerText = lang[currentLang].loading;
+        
+            // Используем прокси для обхода CORS (временное решение для тестирования)
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+            const archiveUrl = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(url)}&output=json&limit=5`;
+        
+            try {
+                const response = await fetch(proxyUrl + archiveUrl, {
+                    headers: {
+                        'User-Agent': 'OSINT-Lookup/1.0 (Contact: your-email@example.com)',
+                        'Accept': 'application/json'
+                    },
+                    timeout: 10000 // Тайм-аут 10 секунд
+                });
+        
+                if (!response.ok) {
+                    throw new Error(`Сервер ответил с ошибкой: ${response.status} ${response.statusText}`);
+                }
+        
+                const data = await response.json();
+        
+                if (!data.length || data.length === 1) {
+                    result.innerHTML = `
+                        <div class="info-block">
+                            <h3>📜 История сайта</h3>
+                            <p><strong>URL:</strong> ${url}</p>
+                            <p>❌ Архивные записи не найдены</p>
+                            <p>Попробуйте проверить <a href="https://web.archive.org/web/*/${url}" target="_blank">вручную</a></p>
+                        </div>
+                    `;
+                    return;
+                }
+        
+                const snapshots = data.slice(1).map(row => ({
+                    timestamp: row[1],
+                    url: `https://web.archive.org/web/${row[1]}/${row[2]}`
+                }));
+        
+                const resultHTML = `
+                    <div class="info-block fancy-frame">
+                        <h3>📜 История сайта</h3>
+                        <p><strong>URL:</strong> ${url}</p>
+                        <p><strong>Найдено снимков:</strong> ${snapshots.length}</p>
+                        <p><strong>Последние снимки:</strong></p>
+                        <ul class="vertical-list">
+                            ${snapshots.map(s => `
+                                <li>
+                                    ${s.timestamp} - <a href="${s.url}" target="_blank">Просмотреть</a>
+                                </li>
+                            `).join('')}
+                        </ul>
+                        <p><a href="https://web.archive.org/web/*/${url}" target="_blank">Посмотреть все снимки</a></p>
+                    </div>
+                `;
+                result.innerHTML = resultHTML;
+                cache.set(`webarchive_${url}`, resultHTML);
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="info-block">
+                        <h3>📜 История сайта</h3>
+                        <p><strong>URL:</strong> ${url}</p>
+                        <p>❌ Ошибка: ${error.message}</p>
+                        <p>Причина: Возможно, сервер блокирует запросы из браузера (CORS) или временно недоступен.</p>
+                        <p>Попробуйте проверить <a href="https://web.archive.org/web/*/${url}" target="_blank">вручную</a></p>
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        window.addEventListener('load', () => {
+            console.log('Страница загружена');
+            if (!window.L) console.error('Leaflet не загрузился');
+            if (!window.EXIF) console.error('EXIF.js не загрузился');
+            if (!window.Papa) console.error('PapaParse не загрузился');
+            if (!window.libphonenumber) console.error('libphonenumber не загрузился');
+        });
+    </script>
+
+
+
+</body></html>
